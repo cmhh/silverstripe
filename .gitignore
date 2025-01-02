@@ -1,0 +1,15 @@
+.vscode
+
+.env
+
+projects/*
+!projects/test
+
+docker/*
+!docker/ubuntu
+!docker/composer
+!docker/silverstripe
+
+*.yml
+!docker-compose-test.yml
+!docker-compose.yml

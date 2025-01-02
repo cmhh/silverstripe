@@ -1,0 +1,39 @@
+services:
+  silverstripe:
+    image: silverstripe
+    build:
+      context: docker/silverstripe
+      dockerfile: Dockerfile
+    volumes:
+      - ${SS_PROJECT_DIR:-./projects/test}:/opt/nginx/html
+    depends_on:
+      - database
+    environment:
+      - SS_TRUSTED_PROXY_IPS=${SS_TRUSTED_PROXY_IPS:-*}
+      - SS_ENVIRONMENT_TYPE=${SS_ENVIRONMENT_TYPE:-dev}
+      - SS_DATABASE_SERVER=${SS_DATABASE_SERVER:-database}
+      - SS_DATABASE_NAME=${SS_DATABASE_NAME:-silverstripe}
+      - SS_DATABASE_USERNAME=${SS_DATABASE_USERNAME:-admin}
+      - SS_DATABASE_PASSWORD=${SS_DATABASE_PASSWORD:-password}
+      - SS_DEFAULT_ADMIN_USERNAME=${SS_DEFAULT_ADMIN_USERNAME:-admin}
+      - SS_DEFAULT_ADMIN_PASSWORD=${SS_DEFAULT_ADMIN_PASSWORD:-password}
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+
+  database:
+    image: mariadb:11.6-noble
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-password}
+      - SS_DATABASE_NAME=${SS_DATABASE_NAME:-silverstripe}
+      - SS_DATABASE_USERNAME=${SS_DATABASE_USERNAME:-admin}
+      - SS_DATABASE_PASSWORD=${SS_DATABASE_PASSWORD:-password}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./scripts/silverstripe_setup.sh:/docker-entrypoint-initdb.d/silverstripe_setup.sh
+    ports:
+      - "3306:3306"
+
+volumes:
+  db-data:

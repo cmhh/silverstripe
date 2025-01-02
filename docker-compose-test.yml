@@ -1,0 +1,29 @@
+services:    
+  silverstripe:
+    image: silverstripe
+    build:
+      context: docker/silverstripe
+      dockerfile: Dockerfile
+    volumes:
+      - ${SS_PROJECT_DIR:-./projects/test}:/opt/nginx/html
+    depends_on:
+      - database
+    env_file: 
+      - ./.env.example
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+
+  database:
+    image: mariadb:11.6-noble
+    env_file:
+      - ./.env.example
+    volumes:
+      - db-test-data:/var/lib/mysql
+      - ./scripts/silverstripe_setup.sh:/docker-entrypoint-initdb.d/silverstripe_setup.sh
+    ports:
+      - "3306:3306"
+
+volumes:
+  db-test-data:
