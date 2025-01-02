@@ -1,9 +1,8 @@
 .vscode
 
-.env
+/.env
 
 projects/*
-!projects/test
 
 docker/*
 !docker/ubuntu
