@@ -19,7 +19,7 @@ The first run will likely take a while since the required Docker images will nee
 
 ## Setup
 
-It is assumed the reader has a working Docker installation, including Docker Compose.  Images can be build ahead of time by running:
+It is assumed the reader has a working Docker installation, including Docker Compose.  Images can be built ahead of time by running:
 
 ```bash
 bash setup.sh
@@ -39,7 +39,7 @@ Then, to create a new project called `my-website`:
 
 ```bash
 docker run -it --rm \
-  --user 1000:1000 \
+  --user $(id -u):$(id -g) \
   -v ${PWD}/projects:/work \
   composer create-project silverstripe/installer my-website
 ```
@@ -99,7 +99,6 @@ The `/dev/build` endpoint can also be triggered by running:
 Note that the setup will expect a number of environment variables to be set.  This is most easily done by including all required variables in a file called `.env`.  An example file called `.env.example` is included with the following content:
 
 ```bash
-SS_PROJECT_DIR=./projects/comcomwebsite
 SS_TRUSTED_PROXY_IPS=*
 SS_ENVIRONMENT_TYPE=dev
 SS_DATABASE_SERVER=database
@@ -111,7 +110,15 @@ SS_DEFAULT_ADMIN_PASSWORD=password
 MARIADB_ROOT_PASSWORD=password
 ```
 
-Note that all but the last of these variables will also need to be included in a `.env` file in the project website directory. A test project is included in `projects/test` which includes a `.env` file which matches `.env.example` in the repository root.  Users will need to ensure dependencies are restored from `composer.lock` by first running:
+In addition to this, the provided compose file will need access to an environment variable called `SS_PROJECT_DIR` (defaults to `./projects/test`) in order to mount the correct project.  This can be exported in the usual way before running `docker compose`, or else passed as follows:
+
+```bash
+SS_PROJECT_DIR=${PWD}/projects/my-website docker compose -f <compose file>.yml up -d
+```
+
+Note that the permissions are a bit fiddly.  The setup has been provided to run as a root user for now (starting the required services as a normal user is awkward), but this causes issues when trying to write or modify files in the Silverstripe project folder via the Silverstripe web UI.  For now, the Silverstripe folder will be recursively assigned a group of `www-data` on startup, and `go+rwx` permissions are applied.  
+
+Note that the same `.env` file, but wihtout the `MARIADB_ROOT_PASSWORD` entry,  will also need to be included in a `.env` file in the Silverstripe project website directory. A test project is included in `projects/test` which includes a `.env` file which matches `.env.example` in the repository root.  Users will need to ensure dependencies are restored from `composer.lock` by first running:
 
 ```bash
 docker run -it --rm \
