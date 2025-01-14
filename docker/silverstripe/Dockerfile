@@ -76,4 +76,4 @@ COPY conf/supervisor/silverstripe.conf /etc/supervisor/conf.d/silverstripe.conf
 
 EXPOSE 80 443
 
-CMD ["/usr/bin/supervisord", "-n"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
