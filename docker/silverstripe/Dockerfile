@@ -5,14 +5,14 @@ ARG NGINX_VERSION=1.27.3
 
 RUN apt-get update && \
   apt-get --no-install-recommends -y install \
-    curl ca-certificates \
+    curl ca-certificates unzip \
     build-essential autoconf libtool bison re2c pkg-config libxml2-dev libsqlite3-dev \
     libssl-dev libcurl4-openssl-dev libzip-dev libpng-dev libjpeg-dev libwebp-dev libavif-dev \
     libpq-dev libonig-dev libicu-dev \
     libpcre2-dev libssl-dev zlib1g-dev \
-    supervisor
-  
-RUN cd /usr/local/src && \
+    supervisor && \
+  # php  
+  cd /usr/local/src && \
   curl -sL \
     https://github.com/php/php-src/archive/refs/tags/php-${PHP_VERSION}.tar.gz \
     -o php.tar.gz && \
@@ -31,14 +31,14 @@ RUN cd /usr/local/src && \
   make -j12 && \
   make install && \
   rm -fR /opt/php/etc/*.default /opt/bin/etc/php-fpm.d/*.default && \
-  rm -fR /usr/local/src/php*
-
-RUN cd /usr/local/src && \
+  rm -fR /usr/local/src/php* && \
+  # composer
+  cd /usr/local/src && \
   curl -s https://getcomposer.org/installer -o installer.php && \  
   /opt/php/bin/php installer.php --install-dir=/usr/local/bin --filename=composer && \
-  rm -fR /usr/local/src/composer.php
-
-RUN cd /usr/local/src && \
+  rm -fR /usr/local/src/composer.php && \
+  # nginx
+  cd /usr/local/src && \
   curl \
     -sL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
     -o nginx.tar.gz && \
@@ -55,7 +55,13 @@ RUN cd /usr/local/src && \
   make install  && \
   mkdir -p /opt/nginx/conf/nginx.conf.d && \
   rm /opt/nginx/conf/*.default && \
-  rm -fR /usr/local/src/nginx*
+  rm -fR /usr/local/src/nginx* && \
+  # tidy up
+  apt-get -y purge \
+    build-essential autoconf libtool bison re2c pkg-config && \
+  apt-get -y autoremove && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /opt/php/bin/php /usr/local/bin/php && \
   ln -s /opt/php/sbin/php-fpm /usr/local/bin/php-fpm && \
@@ -65,6 +71,7 @@ COPY conf/php/php.ini /opt/php/lib/php.ini
 COPY conf/php/php-fpm.conf /opt/php/etc/php-fpm.d/php-fpm.conf
 COPY conf/nginx/nginx.conf /opt/nginx/conf/nginx.conf
 COPY conf/nginx/silverstripe.conf /opt/nginx/conf/nginx.conf.d/silverstripe.conf
+COPY conf/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY conf/supervisor/silverstripe.conf /etc/supervisor/conf.d/silverstripe.conf
 
 EXPOSE 80 443
